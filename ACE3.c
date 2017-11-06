@@ -41,8 +41,8 @@ void add_x(); //0111
 void skipcond(); //1000
 
 //Auxilary functions
-int decimal_to_binary();
-int binary_to_decimal();
+int binary(int size,char bin[size])
+char * decimal(int dec,int size)
 
 
 int main()
@@ -158,6 +158,98 @@ void add_x()
 void skipcond()
 {
 	
+}
+
+//Auxilary functions
+
+int binary(int size,char bin[size])
+{
+	if(size==17){
+	int result=0;
+	if(bin[size-2]=='1'){
+		result++;
+	}
+	for(int i=size-3;i>-1;i--){
+		int power_of_two=2;
+		if(bin[i]=='1'){
+			for(int f=i;f<size-3;f++){
+				power_of_two=power_of_two*2;
+			}
+			if(i!=0){
+				result=result+power_of_two;
+			}else{
+				result=result-power_of_two;
+			}
+		}
+	}
+	return result;
+	}else{
+		int result=0;
+		if(bin[size-2]=='1'){
+			result++;
+		}
+		for(int i=size-3;i>-1;i--){
+			int power_of_two=2;
+			if(bin[i]=='1'){
+				for(int f=i;f<size-3;f++){
+					power_of_two=power_of_two*2;
+				}
+				result=result+power_of_two;
+			}
+		}
+	
+		return result;
+	}
+}
+char * decimal(int dec,int size)
+{
+	int copy=dec;
+	if(size==17){
+		static char bin[17];
+		bin[size-1]='\0';
+		for(int i=size-2;i>-1;i--){
+			if(dec%2==0 ){
+				bin[i]='0';
+			}else{
+				bin[i]='1';
+			}
+			dec=dec/2;
+		}
+		if(copy>0){
+			return bin;
+		}else{
+			/*Flip bits*/
+			for(int i=size-2;i>-1;i--){
+				if(bin[i]=='0'){
+					bin[i]='1';
+				}else{
+					bin[i]='0';
+				}
+			}
+			/*Add one*/
+			for(int i=size-2;i>-1;i--){
+				if(bin[i]=='0'){
+					bin[i]='1';
+					break;
+				}else{
+					bin[i]='0';
+				}
+			}
+			return bin;
+		}
+	}else{
+		static char bin[size];
+		bin[size-1]='\0';
+		for(int i=size-2;i>-1;i--){
+			if(dec%2==0 ){
+				bin[i]='0';
+			}else{
+				bin[i]='1';
+			}
+			dec=dec/2;
+		}
+		return bin;
+	}
 }
 
 
