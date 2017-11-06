@@ -19,6 +19,7 @@
 #include<stdio.h>
 #include<string.h>
 
+char main_memory[4096][17];//4K words main memory
 //Declaring variables to be used as registers
 int running = 1; //Variable controlling 'while' loop
 char ac[17]; //Accumulator
@@ -26,8 +27,9 @@ char ir[17]; //Instruction register
 char mbr[17]; //Memory buffer register
 char pc[13]; //Program counter
 char mar[13]; //Memory address register
-char in_reg[13]; //Input register
-char out_reg[13]; //Output register
+char in_reg[17]; //Input register
+char out_reg[17]; //Output register
+char flags[4];//Indicating overflow, halt etc.
 
 //Declaring functions
 void halt(); //0000
@@ -41,14 +43,13 @@ void add_x(); //0111
 void skipcond(); //1000
 
 //Auxilary functions
-int binary(int size,char bin[size])
-char * decimal(int dec,int size)
-
+char * decimal_to_binary(int dec,int size);
+int binary_to_decimal(int size,char bin[size]);
+void print_memory();
+void check_instruction();
 
 int main()
 {
-char main_memory[4096][17] = {' '}; //4K words main memory
-
 	while(running == 1)
 	{
 		//Functions will go here
@@ -73,96 +74,120 @@ void jump_x()
 {
 /*JMP instruction transfers control to the address indicated by its operand, setting IP.
 Take care not to JMP to the JMP instruction itself!*/
-	
+	char address[13];
+	scanf("%12s",address);
+	strcpy(pc,address);	
 }
 
 void load_x()
 {
 /*LDA address fetches the value stored at address and copies it to the accumulator,
 giving the main way to get data from memory to the processor.*/	
-	
+	char address[13];
+	scanf("%12s",address);
+	int location=binary_to_decimal(13,address);
+	strcpy(ac,main_memory[location]);
 }
 
 void store_x()
 {
 /*Wites a copy of the accumulator to the indicates address in memory.*/
-	
+	char address[13];
+	scanf("%12s",address);
+	int location=binary_to_decimal(13,address);
+	strcpy(main_memory[location],ac);
 	
 }
-
-void input()
+void check_instruction()
 {
- 	printf("Please enter your 16-bit binary input\n");
-	printf("Please include a 4-bit OPcode and 12bit Operand - >");
-	scanf(" %s", in_reg);
-	
 	//Checking what OPcode is
-	if(in_reg[0] == 0 && in_reg[1] == 0 && in_reg[2] == 0 && in_reg[3] == 0)
+	if(ir[0] == 0 && ir[1] == 0 && ir[2] == 0 && ir[3] == 0)
 	{
 		halt();
 	}
-	else if(in_reg[0] == 0 && in_reg[1] == 0 && in_reg[2] == 0 && in_reg[3] == 1)
+	else if(ir[0] == 0 && ir[1] == 0 && ir[2] == 0 && ir[3] == 1)
 	{
 		jump_x();
 	}
-	else if(in_reg[0] == 0 && in_reg[1] == 0 && in_reg[2] == 1 && in_reg[3] == 0)
+	else if(ir[0] == 0 && ir[1] == 0 && ir[2] == 1 && ir[3] == 0)
 	{
 		load_x();
 	}
-	else if(in_reg[0] == 0 && in_reg[1] == 0 && in_reg[2] == 1 && in_reg[3] == 1)
+	else if(ir[0] == 0 && ir[1] == 0 && ir[2] == 1 && ir[3] == 1)
 	{
 		store_x();
 	}
-	else if(in_reg[0] == 0 && in_reg[1] == 1 && in_reg[2] == 0 && in_reg[3] == 0)
+	else if(ir[0] == 0 && ir[1] == 1 && ir[2] == 0 && ir[3] == 0)
 	{
 		input();
 	}
-	else if(in_reg[0] == 0 && in_reg[1] == 1 && in_reg[2] == 0 && in_reg[3] == 1)
+	else if(ir[0] == 0 && ir[1] == 1 && ir[2] == 0 && ir[3] == 1)
 	{
 		output();
 	}
-	else if(in_reg[0] == 0 && in_reg[1] == 1 && in_reg[2] == 1 && in_reg[3] == 0)
+	else if(ir[0] == 0 && ir[1] == 1 && ir[2] == 1 && ir[3] == 0)
 	{
 		subt_x();
 	}
-	else if(in_reg[0] == 0 && in_reg[1] == 1 && in_reg[2] == 1 && in_reg[3] == 1)
+	else if(ir[0] == 0 && ir[1] == 1 && ir[2] == 1 && ir[3] == 1)
 	{
 		add_x();
 	}
-	else if(in_reg[0] == 1 && in_reg[1] == 0 && in_reg[2] == 0 && in_reg[3] == 0)
+	else if(ir[0] == 1 && ir[1] == 0 && ir[2] == 0 && ir[3] == 0)
 	{
 		skipcond();
 	}
 }
 
+void input(){
+	 printf("Please enter your binary input: ");
+	scanf(" %16s", in_reg);
+	strcpy(ac,in_reg);
+}
+
 void output()
 {
 /*copy AC to back of output queue to AC; IP = IP+1*/
-	for(int i = 0; i <13; i++)
-	{
-		out_reg[i] = ac[i];
-	}
-	
+	strcpy(out_reg,ac);
 }
 
 void subt_x()
 {
-	
+	char address[13];
+	scanf("%12s",address);
+	int location=binary_to_decimal(13,address);
+	int result=binary_to_decimal(17,main_memory[location])-binary_to_decimal(17,ac);
+	if(result<-32769){
+		printf("Overflow detected");
+		flags[3]='1';
+	}
+	strcpy(ac,decimal_to_binary(result,17));
 }
 
 void add_x()
 {
-	
+	char address[13];
+	scanf("%12s",address);
+	int location=binary_to_decimal(13,address);
+	int result=binary_to_decimal(17,ac)+binary_to_decimal(17,main_memory[location]);
+	if(result>32768){
+		printf("Overflow detected");
+		flags[3]='1';
+	}
+	strcpy(ac,decimal_to_binary(result,17));	
 }
 
 void skipcond()
 {
 	
 }
-
-//Auxilary functions
-
-int binary(int size,char bin[size])
+void print_memory(){
+	printf("Printing contents of memory:\n");
+	for(int i=0;i<4096;i++){
+		printf("[%d] %s\n",i,main_memory[i]);
+	}
+}
+int binary_to_decimal(int size,char bin[size])
 {
 	if(size==17){
 	int result=0;
@@ -201,7 +226,7 @@ int binary(int size,char bin[size])
 		return result;
 	}
 }
-char * decimal(int dec,int size)
+char * decimal_to_binary(int dec,int size)
 {
 	int copy=dec;
 	if(size==17){
@@ -218,6 +243,7 @@ char * decimal(int dec,int size)
 		if(copy>0){
 			return bin;
 		}else{
+			printf("da");
 			/*Flip bits*/
 			for(int i=size-2;i>-1;i--){
 				if(bin[i]=='0'){
@@ -238,7 +264,7 @@ char * decimal(int dec,int size)
 			return bin;
 		}
 	}else{
-		static char bin[size];
+		static char bin[13];
 		bin[size-1]='\0';
 		for(int i=size-2;i>-1;i--){
 			if(dec%2==0 ){
@@ -251,5 +277,3 @@ char * decimal(int dec,int size)
 		return bin;
 	}
 }
-
-
