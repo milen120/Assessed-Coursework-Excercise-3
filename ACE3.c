@@ -47,7 +47,7 @@ int binary_to_decimal();
 
 int main()
 {
-char main_memory[4000][13] = {' '}; //4K words main memory
+char main_memory[4000][17] = {' '}; //4K words main memory
 
 	while(running == 1)
 	{
